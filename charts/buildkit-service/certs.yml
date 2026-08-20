@@ -1,0 +1,82 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: buildkit-ca
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: buildkit-ca
+spec:
+  isCA: true
+  commonName: BuildKit CA
+  secretName: buildkit-ca
+  # 10 years, this is a CA
+  duration: 87660h0m0s
+  privateKey:
+    algorithm: RSA
+  issuerRef:
+    name: buildkit-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: buildkit
+spec:
+  ca:
+    secretName: buildkit-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: buildkit-server
+spec:
+  commonName: buildkit
+  secretName: buildkit-server
+  # 1 year
+  duration: 8760h0m0s
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+  dnsNames:
+  - localhost
+  - buildkit-buildkit-service
+  - buildkitd
+  ipAddresses:
+  - 127.0.0.1
+  - ::1
+  privateKey:
+    algorithm: RSA
+  issuerRef:
+    name: buildkit
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: buildkit-client
+spec:
+  commonName: client
+  secretName: buildkit-client
+  # 1 year
+  duration: 8760h0m0s
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+  dnsNames:
+  - client
+  privateKey:
+    algorithm: RSA
+  issuerRef:
+    name: buildkit
+    kind: Issuer
+    group: cert-manager.io
